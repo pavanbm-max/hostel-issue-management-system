@@ -1,17 +1,19 @@
 const express = require("express");
 const cors = require("cors");
 
+// Load environment variables
 require("dotenv").config({ path: __dirname + "/.env" });
-console.log("ENV CHECK:", process.env.MONGO_URI);
+console.log("ENV mode:", process.env.NODE_ENV || "development");
 
 const connectDB = require("./config/db");
 
-const app = express(); // 🔴 app MUST be created before use
+const app = express();
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// ROUTES AFTER app initialization
+// Routes
 const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 const issueRoutes = require("./routes/issues");
@@ -25,23 +27,29 @@ app.get("/", (req, res) => {
 async function startServer() {
   try {
     await connectDB();
-    app.listen(5000, () => {
-      console.log("Server running on port 5000");
+
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (err) {
     console.error("Failed to start server due to DB error:", err);
-
-    if (process.env.DEV_LOGIN === 'true') {
-      console.warn("DEV_LOGIN enabled — starting server despite DB error (dev only).");
-      app.listen(5000, () => {
-        console.log("Server running on port 5000 (DEV mode, DB disconnected)");
-      });
-      return;
-    }
-
-    // Exit so the developer can fix environment/config and restart
+    // Exit so the deployer can fix environment/config and restart
     process.exit(1);
   }
 }
 
 startServer();
+
+// Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Recommended: send to monitoring, then exit
+  process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Recommended: send to monitoring, then exit
+  process.exit(1);
+});
