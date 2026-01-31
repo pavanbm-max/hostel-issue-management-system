@@ -37,6 +37,18 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Quick dev fallback when running locally and DB is down
+    if (process.env.DEV_LOGIN === 'true') {
+      const devEmail = process.env.DEV_EMAIL || 'dev@local';
+      const devPassword = process.env.DEV_PASSWORD || 'devpass';
+      const devRole = process.env.DEV_ROLE || 'management';
+
+      if (email === devEmail && password === devPassword) {
+        const token = jwt.sign({ id: 'dev-user', role: devRole }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        return res.json({ token, role: devRole, name: 'Dev User' });
+      }
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -59,6 +71,19 @@ router.post("/login", async (req, res) => {
       name: user.name
     });
   } catch (err) {
+    // If DB is down and DEV_LOGIN is enabled, allow dev creds as a fallback
+    if (process.env.DEV_LOGIN === 'true') {
+      const devEmail = process.env.DEV_EMAIL || 'dev@local';
+      const devPassword = process.env.DEV_PASSWORD || 'devpass';
+      const devRole = process.env.DEV_ROLE || 'management';
+
+      const { email, password } = req.body;
+      if (email === devEmail && password === devPassword) {
+        const token = jwt.sign({ id: 'dev-user', role: devRole }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        return res.json({ token, role: devRole, name: 'Dev User' });
+      }
+    }
+
     res.status(500).json({ error: err.message });
   }
 });
