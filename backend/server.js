@@ -5,7 +5,6 @@ require("dotenv").config({ path: __dirname + "/.env" });
 console.log("ENV CHECK:", process.env.MONGO_URI);
 
 const connectDB = require("./config/db");
-connectDB();
 
 const app = express(); // 🔴 app MUST be created before use
 
@@ -22,9 +21,27 @@ app.get("/", (req, res) => {
   res.send("API running");
 });
 
-const PORT = process.env.PORT || 5000;
+// Start server only after DB connection succeeds
+async function startServer() {
+  try {
+    await connectDB();
+    app.listen(5000, () => {
+      console.log("Server running on port 5000");
+    });
+  } catch (err) {
+    console.error("Failed to start server due to DB error:", err);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+    if (process.env.DEV_LOGIN === 'true') {
+      console.warn("DEV_LOGIN enabled — starting server despite DB error (dev only).");
+      app.listen(5000, () => {
+        console.log("Server running on port 5000 (DEV mode, DB disconnected)");
+      });
+      return;
+    }
 
+    // Exit so the developer can fix environment/config and restart
+    process.exit(1);
+  }
+}
+
+startServer();
