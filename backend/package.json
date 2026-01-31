@@ -1,4 +1,11 @@
 {
+  "name": "hostel-issue-backend",
+  "version": "1.0.0",
+  "description": "Backend for Hostel Issue Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
