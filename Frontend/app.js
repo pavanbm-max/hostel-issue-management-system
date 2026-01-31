@@ -1,3 +1,4 @@
+const API_BASE = "https://hostel-issue-management-system-production.up.railway.app";
 
 /* =========================
    GLOBALS
@@ -30,7 +31,8 @@ async function login() {
   try {
     if (submitBtn) submitBtn.disabled = true;
 
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
@@ -106,14 +108,23 @@ async function submitIssue() {
 
     console.log("🟢 submitIssue fired", { title, hostel, room, category, priority });
 
-    const res = await fetch("http://localhost:5000/api/issues", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ title, description, category, priority, hostel, room, contact })
-    });
+   const res = await fetch(`${API_BASE}/api/issues`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + token
+  },
+  body: JSON.stringify({
+    title,
+    description,
+    category,
+    priority,
+    hostel,
+    room,
+    contact
+  })
+});
+
 
     const data = await res.json();
     console.log("📡 submitIssue response:", res.status, data);
@@ -146,7 +157,7 @@ async function loadAdminDashboard() {
 
   try {
     const statsRes = await fetch(
-      "http://localhost:5000/api/issues/stats/summary",
+      "http://hostel-issue-management-system-production.up.railway.app/api/issues/stats/summary",
       { headers: { Authorization: "Bearer " + token } }
     );
 
@@ -158,7 +169,7 @@ async function loadAdminDashboard() {
     document.getElementById("inProgressIssues").innerText = stats.highPriorityIssues;
 
     const issuesRes = await fetch(
-      "http://localhost:5000/api/issues",
+      "http://hostel-issue-management-system-production.up.railway.app/api/issues",
       { headers: { Authorization: "Bearer " + token } }
     );
 
@@ -333,7 +344,7 @@ async function resolveIssue(issueId, noteFromButton = null) {
 
   try {
     const res = await fetch(
-      `http://localhost:5000/api/issues/${issueId}`,
+      `http://hostel-issue-management-system-production.up.railway.app/api/issues/${issueId}`,
       {
         method: "PUT",
         headers: {
